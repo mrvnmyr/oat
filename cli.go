@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/mrvnmyr/oat/common"
 	"github.com/mrvnmyr/oat/editorconfig"
+	"github.com/mrvnmyr/oat/filetree"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,7 @@ func init() {
 
 	cmdRoot.PersistentFlags().BoolVar(&common.DebugFlag, "debug", false, "Enable debug output")
 	cmdRoot.AddCommand(editorconfig.Cmd)
+	cmdRoot.AddCommand(filetree.Cmd)
 }
 
 func Cli() {
