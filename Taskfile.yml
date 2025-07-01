@@ -1,0 +1,47 @@
+version: "3"
+
+anchor_build: &anchor_build
+  deps: [fetch, build-tool]
+  sources:
+    - ./Taskfile.yml
+    - ./**/*.go
+
+# --- --- --- --- --- --- --- --- --- ---
+
+vars:
+  build_tool_bin: './build_tool/build_tool{{- if eq OS "windows" }}.exe{{ end -}}'
+
+tasks:
+  fetch:
+    sources:
+      - ./Taskfile.yml
+      - ./go.mod
+      - ./go.sum
+    cmds:
+      - go get
+
+  build-tool:
+    sources:
+      - ./Taskfile.yml
+      - ./build_tool/**/*.go
+      - ./build_tool/go.mod
+      - ./build_tool/go.sum
+    generates:
+      - "{{.build_tool_bin}}"
+    cmds:
+      - go -C "./build_tool/" get
+      - go -C "./build_tool/" build
+
+  build:
+    <<: *anchor_build
+    generates:
+      - ./bin/**/*
+    cmds:
+      - '{{.build_tool_bin}} --only-current --no-go-get {{.CLI_ARGS}}'
+
+  build-all:
+    <<: *anchor_build
+    generates:
+      - ./oat*
+    cmds:
+      - '{{.build_tool_bin}} --no-go-get {{.CLI_ARGS}}'
