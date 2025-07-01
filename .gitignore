@@ -4,5 +4,9 @@ bin/
 oat
 oat.exe
 
+build-hook-pre.bat
+build-hook-pre.sh
+build-hook-post.bat
+build-hook-post.sh
 cycle.sh
 cycle.bat
