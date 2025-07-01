@@ -170,6 +170,10 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string) error {
 		if pathStr == srcRoot {
 			return nil // skip root
 		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			// Skip symlinked files and directories, do not resolve them.
+			return nil
+		}
 		if info.IsDir() {
 			// Don't record directories at all.
 			relPath, err := filepath.Rel(srcRoot, pathStr)
