@@ -49,6 +49,7 @@ func init() {
 
 	Cmd.AddCommand(cmdFlatten)
 	cmdFlatten.PersistentFlags().BoolVar(&SkipBinaryFiles, "skip-binary-files", true, "Skip binary files")
+	cmdFlatten.PersistentFlags().BoolVar(&LLM, "llm", false, "Output in LLM prompt format")
 	cmdFlatten.PersistentFlags().StringArrayVar(&IgnoredGlobs, "ignored-globs", []string{".git/", ".task/", "node_modules/"}, "IgnoredGlobs")
 	Cmd.AddCommand(cmdExpand)
 }

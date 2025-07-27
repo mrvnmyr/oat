@@ -13,15 +13,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// List of path globs to ignore, e.g. ".git/", "editorconfig/*.go", "foo/**/*.go"
-var IgnoredGlobs []string = []string{
-	".git/",
-	".task/",
-	"node_modules/",
-}
+var (
+	LLM bool = false
 
-// SkipBinaryFiles controls whether binary files are skipped when serializing
-var SkipBinaryFiles bool = true
+	// List of path globs to ignore, e.g. ".git/", "editorconfig/*.go", "foo/**/*.go"
+	IgnoredGlobs []string = []string{
+		".git/",
+		".task/",
+		"node_modules/",
+	}
+
+	// SkipBinaryFiles controls whether binary files are skipped when serializing
+	SkipBinaryFiles bool = true
+)
 
 // shouldIgnore returns true if relPath matches any glob in IgnoredGlobs.
 func shouldIgnore(relPath string) bool {
@@ -226,7 +230,17 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string) error {
 	if err != nil {
 		return err
 	}
-	return common.WriteFileOrStd(yamlPath, out, 0644)
+
+	var result []byte
+	if LLM {
+		result = []byte("```\n")
+		result = append(result, out...)
+		result = append(result, []byte("```\n\nThis is a flattened filetree represented as a YAML.\n\nTODO\n\nImplement what is required to fix this issue and output it in the same flattened filetree YAML structure as was provided before.\n\nIf files are not changed don't output them.\n")...)
+	} else {
+		result = out
+	}
+
+	return common.WriteFileOrStd(yamlPath, result, 0644)
 }
 
 // YAMLToDirTree reads YAML file describing a tree and creates files under destRoot.
