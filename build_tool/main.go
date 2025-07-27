@@ -20,6 +20,21 @@ import (
 const CONFIG_FILE_NAME = "build-tool-config.json"
 
 var (
+	buildHookPrePath  string
+	buildHookPostPath string
+)
+
+func init() {
+	scriptExt := "sh"
+	if runtime.GOOS == "windows" {
+		scriptExt = "bat"
+	}
+
+	buildHookPrePath = fmt.Sprintf("build-hook-pre.%s", scriptExt)
+	buildHookPostPath = fmt.Sprintf("build-hook-post.%s", scriptExt)
+}
+
+var (
 	flagDebug       = false
 	flagOnlyCurrent = false
 	flagNoGoGet     = false
@@ -42,6 +57,39 @@ func debugf(fmtStr string, v ...any) {
 type BuildConfig struct {
 	Env       map[string]string `json:"env"`
 	Platforms [][]string        `json:"platforms"`
+}
+
+func isExecutable(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false // file doesn't exist or other error
+	}
+	mode := info.Mode()
+	// Check if it's a regular file and executable by **someone**
+	return mode.IsRegular() && (mode&0111 != 0)
+}
+
+func run(args []string, envMap map[string]string) {
+	cmd := exec.Command(args[0], args[1:]...)
+
+	// Set env vars: inherit, then override/add entry.Env
+	env := os.Environ()
+	if envMap != nil {
+		for k, v := range envMap {
+			env = append(env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+	cmd.Env = env
+
+	if flagDebug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+
+	debugf("Running '%s'...\n", args)
+
+	err := cmd.Run()
+	check(err)
 }
 
 func findUpwards(filename string) (string, error) {
@@ -92,14 +140,16 @@ func main() {
 		check(err)
 
 		configPath = filepath.Join(dir, CONFIG_FILE_NAME)
+		buildHookPrePath = filepath.Join(dir, buildHookPrePath)
+		buildHookPostPath = filepath.Join(dir, buildHookPostPath)
 
 		debugf("Current directory: %s\n", cwd)
 		debugf("Config Path: %s\n", configPath)
+		debugf("Build Hook Pre Path: %s\n", buildHookPrePath)
+		debugf("Build Hook Post Path: %s\n", buildHookPostPath)
 	}
 
 	{ // parse 'build-oat.json'
-
-		// foo := make(map[interface{}]interface{})
 		contents, err := os.ReadFile(configPath)
 		check(err)
 
@@ -120,14 +170,7 @@ func main() {
 	var entries []RunEntry
 
 	if !flagNoGoGet { // 'run go get' first
-		debugf("Running 'go get'...\n")
-		cmd := exec.Command("go", "get")
-
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err := cmd.Run()
-		check(err)
+		run([]string{"go", "get"}, nil)
 	}
 
 	if !flagOnlyCurrent { // add all GOOS/GOARCH combinations from the config
@@ -224,6 +267,12 @@ func main() {
 			}
 		}
 
+		{ // optionally run 'build-hook-pre' if existing
+			if isExecutable(buildHookPrePath) {
+				run([]string{buildHookPrePath}, nil)
+			}
+		}
+
 		{
 			var (
 				numWorkers = runtime.NumCPU()
@@ -306,6 +355,12 @@ func main() {
 				} else {
 					debugf("\nAll builds succeeded.\n")
 				}
+			}
+		}
+
+		{ // optionally run 'build-hook-post' if existing
+			if isExecutable(buildHookPostPath) {
+				run([]string{buildHookPostPath}, nil)
 			}
 		}
 	}
