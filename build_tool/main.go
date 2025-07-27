@@ -120,8 +120,8 @@ func main() {
 	{ // parse CLI flags
 		flag.BoolVar(&flagDebug, "d", false, "Enable debug mode")
 		flag.BoolVar(&flagDebug, "debug", false, "Enable debug mode (same as -d)")
-		flag.BoolVar(&flagOnlyCurrent, "oc", false, "Build only for current GOOS/GOARCH (same as -oc)")
-		flag.BoolVar(&flagOnlyCurrent, "only-current", false, "Build only for current GOOS/GOARCH")
+		flag.BoolVar(&flagOnlyCurrent, "oc", false, "Build only for current GOOS/GOARCH")
+		flag.BoolVar(&flagOnlyCurrent, "only-current", false, "Build only for current GOOS/GOARCH (same as -oc)")
 		flag.BoolVar(&flagNoGoGet, "ngg", false, "Don't run 'go get' before building")
 		flag.BoolVar(&flagNoGoGet, "no-go-get", false, "Don't run 'go get' before building (same as -ngg)")
 
