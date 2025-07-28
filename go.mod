@@ -3,6 +3,7 @@ module github.com/mrvnmyr/oat
 go 1.24.4
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/editorconfig/editorconfig-core-go/v2 v2.6.3
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v3 v3.0.1
