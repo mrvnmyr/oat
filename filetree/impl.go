@@ -23,28 +23,68 @@ var (
 		"node_modules/",
 	}
 
+	// List of path globs to include only
+	AllowedGlobs []string = []string{}
+
 	// SkipBinaryFiles controls whether binary files are skipped when serializing
 	SkipBinaryFiles bool = true
 )
 
-// shouldIgnore returns true if relPath matches any glob in IgnoredGlobs.
+// shouldIgnore returns true if relPath matches any glob.
 func shouldIgnore(relPath string) bool {
 	relPath = strings.TrimPrefix(relPath, "./")
 	relPathSlash := relPath
 	if !strings.HasSuffix(relPathSlash, "/") && isDirGlobMatch(relPath) {
 		relPathSlash += "/"
 	}
-	for _, glob := range IgnoredGlobs {
-		// If the glob ends with "/", treat as directory ignore
+
+	match := func(glob string) bool {
 		if strings.HasSuffix(glob, "/") {
-			// Match the directory itself and anything under it
 			if strings.HasPrefix(relPathSlash, glob) {
 				return true
 			}
 		}
-		// Otherwise use path.Match for files and patterns
 		ok, err := path.Match(glob, relPath)
 		if err == nil && ok {
+			return true
+		}
+		return false
+	}
+
+	for _, glob := range IgnoredGlobs {
+		if match(glob) {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldAllow returns true if relPath matches any glob in AllowedGlobs, or if the list is empty.
+func shouldAllow(relPath string) bool {
+	if len(AllowedGlobs) == 0 {
+		return true
+	}
+	relPath = strings.TrimPrefix(relPath, "./")
+	relPathSlash := relPath
+	if !strings.HasSuffix(relPathSlash, "/") && isDirGlobMatch(relPath) {
+		relPathSlash += "/"
+	}
+
+	match := func(glob string) bool {
+		if strings.HasSuffix(glob, "/") {
+			if strings.HasPrefix(relPathSlash, glob) {
+				return true
+			}
+		}
+		ok, err := path.Match(glob, relPath)
+		if err == nil && ok {
+			return true
+		}
+		return false
+	}
+
+	for _, glob := range AllowedGlobs {
+		if match(glob) {
 			return true
 		}
 	}
@@ -77,7 +117,6 @@ func isLikelyBinaryFile(path string) (bool, error) {
 	}
 	buf = buf[:n]
 
-	// Heuristic: if it contains NUL or is not valid UTF-8, treat as binary.
 	if n == 0 {
 		return false, nil // empty file is not binary
 	}
@@ -93,7 +132,6 @@ func isLikelyBinaryFile(path string) (bool, error) {
 }
 
 func globToRegexp(glob string) string {
-	// Translate a glob to a regexp: "**" => "(.*/)?", "*" => "[^/]*", "?" => "[^/]"
 	var rx strings.Builder
 	rx.WriteString("^")
 	for i := 0; i < len(glob); {
@@ -132,14 +170,12 @@ func matchIncludeOnly(relPath string, includeOnly []string) bool {
 	}
 	for _, pat := range includeOnly {
 		pat = strings.TrimPrefix(pat, "./")
-		// Directory pattern: trailing slash
 		if strings.HasSuffix(pat, "/") {
 			if strings.HasPrefix(relPathSlash, pat) {
 				return true
 			}
 			continue
 		}
-		// Glob with "**"
 		if strings.Contains(pat, "**") {
 			rx := globToRegexp(pat)
 			if ok, _ := regexp.MatchString(rx, relPath); ok {
@@ -147,7 +183,6 @@ func matchIncludeOnly(relPath string, includeOnly []string) bool {
 			}
 			continue
 		}
-		// Normal glob
 		if strings.ContainsAny(pat, "*?[") {
 			ok, err := path.Match(pat, relPath)
 			if err == nil && ok {
@@ -155,7 +190,6 @@ func matchIncludeOnly(relPath string, includeOnly []string) bool {
 			}
 			continue
 		}
-		// Exact file match
 		if relPath == pat {
 			return true
 		}
@@ -175,28 +209,28 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string) error {
 			return nil // skip root
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
-			// Skip symlinked files and directories, do not resolve them.
 			return nil
 		}
 		if info.IsDir() {
-			// Don't record directories at all.
 			relPath, err := filepath.Rel(srcRoot, pathStr)
 			if err != nil {
 				return err
 			}
 			relPath = filepath.ToSlash(relPath)
 			if shouldIgnore(relPath) {
-				return filepath.SkipDir // skip subtree if ignored
+				return filepath.SkipDir
 			}
-			return nil // skip directory entries
+			return nil
 		}
 		relPath, err := filepath.Rel(srcRoot, pathStr)
 		if err != nil {
 			return err
 		}
 		relPath = filepath.ToSlash(relPath)
-		// Check against ignored globs
 		if shouldIgnore(relPath) {
+			return nil
+		}
+		if !shouldAllow(relPath) {
 			return nil
 		}
 		if !matchIncludeOnly(relPath, includeOnly) {
@@ -208,7 +242,6 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string) error {
 				return err
 			}
 			if isBin {
-				// skip this file entirely
 				return nil
 			}
 		}
@@ -256,7 +289,6 @@ func YAMLToDirTree(yamlPath, destRoot string) error {
 	}
 	for f, entry := range tree {
 		full := filepath.Join(destRoot, filepath.FromSlash(f))
-		// Ensure parent dir exists
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 			return err
 		}
