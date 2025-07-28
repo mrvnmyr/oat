@@ -1,14 +1,10 @@
-bin/
 .task/
-
-oat
-oat.exe
+bin/
 
 build-hook-post.bat
 build-hook-post.sh
 build-hook-pre.bat
 build-hook-pre.sh
-build.bat
-build.sh
-cycle.bat
-cycle.sh
+
+oat
+oat.exe
