@@ -1,7 +1,11 @@
 package main
 
-// This is a simple binary that builds the actual project.
-// You could do the same thing with shell scripts, but we want to be
+// Go Build Tool v0.1 (2025-07-28) (49fa8785c1d6b286)
+// https://github.com/mrvnmyr/go-build-tool
+
+// This is a simple standalone binary that builds the actual project.
+//
+// You could do the same thing with OS specific shell scripts, but we want to be
 // cross-platform and not require much other than 'go' and 'git'.
 
 import (
@@ -24,16 +28,6 @@ var (
 	buildHookPostPath string
 )
 
-func init() {
-	scriptExt := "sh"
-	if runtime.GOOS == "windows" {
-		scriptExt = "bat"
-	}
-
-	buildHookPrePath = fmt.Sprintf("build-hook-pre.%s", scriptExt)
-	buildHookPostPath = fmt.Sprintf("build-hook-post.%s", scriptExt)
-}
-
 var (
 	flagDebug       = false
 	flagOnlyCurrent = false
@@ -42,21 +36,21 @@ var (
 	config          BuildConfig
 )
 
+type BuildConfig struct {
+	Env       map[string]string `json:"env"`
+	Platforms [][]string        `json:"platforms"`
+}
+
 func check(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 
-func debugf(fmtStr string, v ...any) {
+func debugf(fmtStr string, v ...interface{}) {
 	if flagDebug {
 		fmt.Printf(fmtStr, v...)
 	}
-}
-
-type BuildConfig struct {
-	Env       map[string]string `json:"env"`
-	Platforms [][]string        `json:"platforms"`
 }
 
 func isExecutable(path string) bool {
@@ -67,6 +61,16 @@ func isExecutable(path string) bool {
 	mode := info.Mode()
 	// Check if it's a regular file and executable by **someone**
 	return mode.IsRegular() && (mode&0111 != 0)
+}
+
+func init() {
+	scriptExt := "sh"
+	if runtime.GOOS == "windows" {
+		scriptExt = "bat"
+	}
+
+	buildHookPrePath = fmt.Sprintf("build-hook-pre.%s", scriptExt)
+	buildHookPostPath = fmt.Sprintf("build-hook-post.%s", scriptExt)
 }
 
 func run(args []string, envMap map[string]string) {
