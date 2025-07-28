@@ -9,7 +9,7 @@ anchor_build: &anchor_build
 # --- --- --- --- --- --- --- --- --- ---
 
 vars:
-  build_tool_bin: './build_tool/build_tool{{- if eq OS "windows" }}.exe{{ end -}}'
+  build_tool_bin: './build-tool/build_tool{{- if eq OS "windows" }}.exe{{ end -}}'
 
 tasks:
   fetch:
@@ -23,14 +23,14 @@ tasks:
   build-tool:
     sources:
       - ./Taskfile.yml
-      - ./build_tool/**/*.go
-      - ./build_tool/go.mod
-      - ./build_tool/go.sum
+      - ./build-tool/**/*.go
+      - ./build-tool/go.mod
+      - ./build-tool/go.sum
     generates:
       - "{{.build_tool_bin}}"
     cmds:
-      - go -C "./build_tool/" get
-      - go -C "./build_tool/" build
+      - go -C "./build-tool/" get
+      - go -C "./build-tool/" build
 
   build:
     <<: *anchor_build

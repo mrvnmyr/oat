@@ -45,7 +45,7 @@ jobs:
           go-version: "1.24.4"
 
       - name: Build for all platforms
-        run: go run ./build_tool/main.go --debug
+        run: go run ./build-tool/main.go -all -no-symlink -debug
 
       - name: Upload binaries
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
