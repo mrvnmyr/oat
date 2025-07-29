@@ -37,11 +37,11 @@ tasks:
     generates:
       - ./bin/**/*
     cmds:
-      - '{{.build_tool_bin}} --only-current --no-go-get {{.CLI_ARGS}}'
+      - '{{.build_tool_bin}} --no-go-get {{.CLI_ARGS}}'
 
   build-all:
     <<: *anchor_build
     generates:
       - ./oat*
     cmds:
-      - '{{.build_tool_bin}} --no-go-get {{.CLI_ARGS}}'
+      - '{{.build_tool_bin}} --all --no-go-get {{.CLI_ARGS}}'
