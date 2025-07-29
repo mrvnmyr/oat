@@ -289,8 +289,17 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string, seeksDotFiles
 // FlattenArgsToYAML handles flattening files/dirs passed as args, optionally without ignores.
 func FlattenArgsToYAML(paths []string, yamlPath string, noIgnores bool) error {
 	tree := map[string]Entry{}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	for _, root := range paths {
-		err := flattenArgAdd(tree, root, "", noIgnores)
+		absRoot, err := filepath.Abs(root)
+		if err != nil {
+			return err
+		}
+		isBelow, relBase := pathIsBelowCWD(absRoot, cwd)
+		err = flattenArgAddWithBase(tree, root, "", noIgnores, absRoot, isBelow, relBase)
 		if err != nil {
 			return err
 		}
@@ -311,8 +320,8 @@ func FlattenArgsToYAML(paths []string, yamlPath string, noIgnores bool) error {
 	return common.WriteFileOrStd(yamlPath, result, 0644)
 }
 
-// Helper for FlattenArgsToYAML: handles one file/dir, recursively
-func flattenArgAdd(tree map[string]Entry, src string, prefix string, noIgnores bool) error {
+// Helper for FlattenArgsToYAML: handles one file/dir, recursively, using absRoot/isBelowCWD info
+func flattenArgAddWithBase(tree map[string]Entry, src string, prefix string, noIgnores bool, absRoot string, isBelow bool, relBase string) error {
 	info, err := os.Lstat(src)
 	if err != nil {
 		return err
@@ -328,11 +337,20 @@ func flattenArgAdd(tree map[string]Entry, src string, prefix string, noIgnores b
 			if info.IsDir() {
 				return nil
 			}
-			relPath, err := filepath.Rel(src, pathStr)
+			absPath, err := filepath.Abs(pathStr)
 			if err != nil {
 				return err
 			}
-			relPath = filepath.ToSlash(relPath)
+			var relPath string
+			if isBelow {
+				rp, err := filepath.Rel(relBase, absPath)
+				if err != nil {
+					return err
+				}
+				relPath = filepath.ToSlash(rp)
+			} else {
+				relPath = filepath.ToSlash(absPath)
+			}
 			if prefix != "" {
 				relPath = path.Join(prefix, relPath)
 			}
@@ -364,11 +382,22 @@ func flattenArgAdd(tree map[string]Entry, src string, prefix string, noIgnores b
 			return nil
 		})
 	} else {
-		relPath := src
+		absPath, err := filepath.Abs(src)
+		if err != nil {
+			return err
+		}
+		var relPath string
+		if isBelow {
+			rp, err := filepath.Rel(relBase, absPath)
+			if err != nil {
+				return err
+			}
+			relPath = filepath.ToSlash(rp)
+		} else {
+			relPath = filepath.ToSlash(absPath)
+		}
 		if prefix != "" {
 			relPath = path.Join(prefix, filepath.Base(src))
-		} else {
-			relPath = filepath.Base(src)
 		}
 		if !noIgnores {
 			if shouldIgnore(relPath) {
@@ -397,6 +426,22 @@ func flattenArgAdd(tree map[string]Entry, src string, prefix string, noIgnores b
 		}
 	}
 	return nil
+}
+
+// Returns (isBelowCWD, relBase)
+func pathIsBelowCWD(absTarget string, cwd string) (bool, string) {
+	cwdAbs := cwd
+	if !filepath.IsAbs(cwdAbs) {
+		cwdAbs, _ = filepath.Abs(cwd)
+	}
+	rel, err := filepath.Rel(cwdAbs, absTarget)
+	if err != nil {
+		return false, cwdAbs
+	}
+	if !strings.HasPrefix(rel, "..") && rel != "." {
+		return true, cwdAbs
+	}
+	return false, cwdAbs
 }
 
 // You may want to define shouldProcessIgnores() as always true here, or remove all usage;
