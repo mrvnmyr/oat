@@ -94,7 +94,7 @@ func isDirGlobMatch(relPath string) bool {
 
 type Entry struct {
 	Perm    string `yaml:"perm"`
-	Content string `yaml:"content,omitempty"`
+	Content string `yaml:"content"`
 }
 
 func isLikelyBinaryFile(path string) (bool, error) {
