@@ -322,6 +322,7 @@ func FlattenArgsToYAML(paths []string, yamlPath string, noIgnores bool) error {
 
 // Helper for FlattenArgsToYAML: handles one file/dir, recursively, using absRoot/isBelowCWD info
 func flattenArgAddWithBase(tree map[string]Entry, src string, prefix string, noIgnores bool, absRoot string, isBelow bool, relBase string) error {
+	common.Debugf("Flatten: %s\n", src)
 	info, err := os.Lstat(src)
 	if err != nil {
 		return err

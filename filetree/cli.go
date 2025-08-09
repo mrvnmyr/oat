@@ -19,10 +19,9 @@ var cmdFlatten = &cobra.Command{
 		for i, _ := range args {
 			args[i] = common.ExpandHome(args[i])
 		}
-
 		if len(args) == 0 {
 			// Seek .flattenignore/.flattenallow as before
-			err := DirTreeToYAML("", "+", []string{}, false)
+			err := DirTreeToYAML("", "+", []string{}, true)
 			common.Check(err)
 			return
 		}
