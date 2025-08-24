@@ -1,3 +1,3 @@
-module github.com/mrvnmyr/oat/build_tool
+module go-build-tool
 
-go 1.24.4
+go 1.16.0

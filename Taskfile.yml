@@ -9,7 +9,7 @@ anchor_build: &anchor_build
 # --- --- --- --- --- --- --- --- --- ---
 
 vars:
-  build_tool_bin: './build-tool/build_tool{{- if eq OS "windows" }}.exe{{ end -}}'
+  build_tool_bin: './build-tool/go-build-tool{{- if eq OS "windows" }}.exe{{ end -}}'
 
 tasks:
   fetch:

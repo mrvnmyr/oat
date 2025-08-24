@@ -487,7 +487,7 @@ func main() {
 				}
 
 				if !flagBuildAll {
-					debugf("\nAll builds succeeded. (Only Current GOOS/GOARCH, pass -all to build all targets)\n")
+					debugf("\nBuild for current platform succeeded. (Pass -all to build all platforms)\n")
 				} else {
 					debugf("\nAll builds succeeded.\n")
 				}
