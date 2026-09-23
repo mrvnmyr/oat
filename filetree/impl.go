@@ -316,7 +316,7 @@ func FlattenArgsToYAML(paths []string, yamlPath string, noIgnores bool) error {
 	if LLM {
 		result = []byte("```\n")
 		result = append(result, out...)
-		result = append(result, []byte("```\n\nThis is a flattened filetree represented as a YAML.\n\nTODO\n\nImplement what is required to fix this issue and output it in the same flattened filetree YAML structure as was provided before.\n\nIf files are not changed don't output them.\n")...)
+		result = append(result, []byte("```\n\nThis is a flattened filetree represented as a YAML.\n\nTODO\n\nImplement what is required to fix this issue and output it in the same flattened filetree YAML structure as was provided before.\n\nDo not invent a 'patch' field. You are not allowed to return patches, but must always return file contents in full!\n\nIf files are not changed don't output them.\n")...)
 	} else {
 		result = out
 	}

@@ -22,7 +22,7 @@ func stripTrailingWhitespaceFromLines(s string) string {
 }
 
 func (s LiteralString) MarshalYAML() (interface{}, error) {
-	Debugf("yaml: marshaling literal string (%d bytes)\n", len(s))
+	// Debugf("yaml: marshaling literal string (%d bytes)\n", len(s))
 
 	return &yaml.Node{
 		Kind:  yaml.ScalarNode,
