@@ -34,6 +34,8 @@ tasks:
 
   build:
     <<: *anchor_build
+    sources:
+      - ./**/*.go
     generates:
       - ./bin/**/*
     cmds:

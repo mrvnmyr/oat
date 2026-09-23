@@ -93,8 +93,8 @@ func isDirGlobMatch(relPath string) bool {
 }
 
 type Entry struct {
-	Perm    string `yaml:"perm"`
-	Content string `yaml:"content"`
+	Perm    string               `yaml:"perm"`
+	Content common.LiteralString `yaml:"content"`
 }
 
 func isLikelyBinaryFile(path string) (bool, error) {
@@ -261,7 +261,7 @@ func DirTreeToYAML(srcRoot, yamlPath string, includeOnly []string, seeksDotFiles
 		}
 		entry := Entry{
 			Perm:    fmt.Sprintf("%04o", info.Mode().Perm()),
-			Content: string(b),
+			Content: common.LiteralString(b),
 		}
 		tree[relPath] = entry
 		return nil
@@ -378,7 +378,7 @@ func flattenArgAddWithBase(tree map[string]Entry, src string, prefix string, noI
 			}
 			tree[relPath] = Entry{
 				Perm:    fmt.Sprintf("%04o", info.Mode().Perm()),
-				Content: string(b),
+				Content: common.LiteralString(b),
 			}
 			return nil
 		})
@@ -423,7 +423,7 @@ func flattenArgAddWithBase(tree map[string]Entry, src string, prefix string, noI
 		}
 		tree[relPath] = Entry{
 			Perm:    fmt.Sprintf("%04o", info.Mode().Perm()),
-			Content: string(b),
+			Content: common.LiteralString(b),
 		}
 	}
 	return nil
