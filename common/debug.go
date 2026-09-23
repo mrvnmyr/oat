@@ -1,11 +1,18 @@
 package common
 
-import "log"
+import (
+	"log"
+	"os"
+)
 
 var DebugFlag bool = false
 
+func debugEnabled() bool {
+	return DebugFlag || os.Getenv("DEBUG") != ""
+}
+
 func Debug(args ...any) {
-	if DebugFlag {
+	if debugEnabled() {
 		log.Println(args...)
 	}
 }
@@ -18,7 +25,7 @@ func Debugf(args ...any) {
 	}
 
 	args = args[1:]
-	if DebugFlag {
+	if debugEnabled() {
 		log.Printf(fmt, args...)
 	}
 }

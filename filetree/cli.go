@@ -34,7 +34,7 @@ var cmdFlatten = &cobra.Command{
 
 var cmdExpand = &cobra.Command{
 	Use:  "expand [input] [output-root]",
-	Args: cobra.RangeArgs(0, 1),
+	Args: cobra.RangeArgs(0, 2),
 	Run: func(cmd *cobra.Command, args []string) {
 		path := "-"
 		outputRoot := "."
